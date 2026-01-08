@@ -29,15 +29,141 @@
             flex-direction: column;
         }
 
+        @media (min-width: 768px) {
+            .sidebar {
+                transform: translateX(0);
+            }
+            .header.with-sidebar {
+                margin-left: 260px;
+            }
+            .sidebar-overlay {
+                display: none;
+            }
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 260px;
+            background-color: #f9fafb;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .sidebar-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            color: #374151;
+            transition: background-color 0.2s ease;
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar-menu-item:hover {
+            background-color: #f3f4f6;
+        }
+
+        .sidebar-menu-item.active {
+            background-color: #e5e7eb;
+            color: #111827;
+        }
+
+        .sidebar-menu-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-menu-text {
+            flex: 1;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 999;
+        }
+
+        .sidebar-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
         .header {
             background-color: #ffffff;
             padding: 1.25rem 1.5rem;
+            margin-left: 0;
+            transition: margin-left 0.3s ease;
+        }
+
+        .header.with-sidebar {
+            margin-left: 260px;
         }
 
         .header-left {
             display: flex;
             align-items: center;
             gap: 0.75rem;
+        }
+
+        .menu-toggle-btn {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            background-color: #ffffff;
+            color: #6b7280;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .menu-toggle-btn:hover {
+            background-color: #f3f4f6;
+            border-color: #d1d5db;
+            color: #374151;
         }
 
         .header-logo {
@@ -239,12 +365,37 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-left">
-            <button class="new-conversation-btn" onclick="newConversation()" title="New Conversation (Ctrl+Shift+N)">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h1 style="font-size: 1.25rem; font-weight: 600; margin: 0; color: #111827;">nanochat</h1>
+            <button class="menu-toggle-btn" onclick="toggleSidebar()" title="Close menu">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 5v14"></path>
-                    <path d="M5 12h14"></path>
+                    <path d="M18 6L6 18"></path>
+                    <path d="M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="sidebar-menu">
+            <div class="sidebar-menu-item active" onclick="newConversation(); toggleSidebar();">
+                <div class="sidebar-menu-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 5v14"></path>
+                        <path d="M5 12h14"></path>
+                    </svg>
+                </div>
+                <span class="sidebar-menu-text">New Conversation</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="header" id="header">
+        <div class="header-left">
+            <button class="menu-toggle-btn" onclick="toggleSidebar()" title="Open menu">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 12h18"></path>
+                    <path d="M3 6h18"></path>
+                    <path d="M3 18h18"></path>
                 </svg>
             </button>
             <h1>nanochat</h1>
@@ -309,6 +460,20 @@
                 }
             }
         });
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const header = document.getElementById('header');
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+            
+            // On desktop, add margin to header when sidebar is open
+            if (window.innerWidth >= 768) {
+                header.classList.toggle('with-sidebar');
+            }
+        }
 
         function newConversation() {
             messages = [];
