@@ -22,6 +22,7 @@ import torch.nn.functional as F
 from nanochat.common import get_dist_info, print0
 from nanochat.muon import Muon, DistMuon
 from nanochat.adamw import DistAdamW
+from nanochat.moe import MoE
 
 # Our custom Flash Attention module that automatically uses FA3 on Hopper+ and SDPA fallback elsewhere
 from nanochat.flash_attention import flash_attn
@@ -136,7 +137,7 @@ class Block(nn.Module):
     def __init__(self, config, layer_idx):
         super().__init__()
         self.attn = CausalSelfAttention(config, layer_idx)
-        self.mlp = MLP(config)
+        self.mlp = MoE(config)
 
     def forward(self, x, ve, cos_sin, window_size, kv_cache):
         x = x + self.attn(norm(x), ve, cos_sin, window_size, kv_cache)
@@ -214,8 +215,23 @@ class GPT(nn.Module):
             torch.nn.init.uniform_(block.attn.c_k.weight, -s, s)
             torch.nn.init.uniform_(block.attn.c_v.weight, -s, s)
             torch.nn.init.zeros_(block.attn.c_proj.weight) # projections are zero
-            torch.nn.init.uniform_(block.mlp.c_fc.weight, -s, s)
-            torch.nn.init.zeros_(block.mlp.c_proj.weight)
+            # Initialize MoE: router and all experts
+            if hasattr(block.mlp, 'impl'):
+                # MoE wrapper - initialize the underlying implementation
+                moe_impl = block.mlp.impl
+            else:
+                # Direct MoE implementation
+                moe_impl = block.mlp
+            # Initialize router (present in both EfficientMoE and ScatterMoE)
+            if hasattr(moe_impl, 'router'):
+                torch.nn.init.uniform_(moe_impl.router.weight, -s, s)
+            # Initialize all experts (EfficientMoE has experts, ScatterMoE uses mlp internally)
+            if hasattr(moe_impl, 'experts'):
+                # EfficientMoE: initialize each expert's weights
+                for expert in moe_impl.experts:
+                    torch.nn.init.uniform_(expert.c_fc.weight, -s, s)
+                    torch.nn.init.zeros_(expert.c_proj.weight)
+            # Note: ScatterMoE's mlp weights are managed internally by scattermoe library
 
         # Per-layer scalars
         self.resid_lambdas.fill_(1.0)   # 1.0 => typical residual connections at init
