@@ -160,7 +160,7 @@ class EfficientMoE(nn.Module):
         
         # Default d_expert to 4 * n_embd (same as standard MLP)
         if d_expert is None:
-            d_expert = 4 * config.n_embd
+            d_expert = 4 * config.n_embd * top_k // num_experts
         self.d_expert = d_expert
         
         # Router: projects input to logits for each expert
@@ -373,11 +373,20 @@ class MoE(nn.Module):
     Main MoE entry point.
     Automatically selects the best backend (ScatterMoE if available and on GPU, else EfficientMoE).
     """
-    def __init__(self, config, num_experts=8, top_k=2, load_balance_weight=0.01, d_expert=None, checkpointing=False):
+    def __init__(self, config, num_experts=8, top_k=2, load_balance_weight=0.01, d_expert=None, checkpointing=False, backend='auto'):
         super().__init__()
-        # Check if ScatterMoE is available and we are likely to run on GPU
-        # (This is a heuristic, better to allow explicit config)
-        self.use_scattermoe = SCATTERMOE_AVAILABLE
+        
+        # Backend selection logic
+        if backend == 'auto':
+            self.use_scattermoe = SCATTERMOE_AVAILABLE
+        elif backend == 'scattermoe':
+            if not SCATTERMOE_AVAILABLE:
+                raise ImportError("ScatterMoE backend requested but scattermoe is not installed.")
+            self.use_scattermoe = True
+        elif backend == 'efficient':
+            self.use_scattermoe = False
+        else:
+            raise ValueError(f"Unknown backend: {backend}. Choose 'auto', 'scattermoe', or 'efficient'.")
         
         if self.use_scattermoe:
             # ScatterMoE usually handles memory efficiently, checkpointing might not be needed or supported the same way
