@@ -16,16 +16,49 @@ export NANOCHAT_BASE_DIR="$HOME/.cache/nanochat"
 mkdir -p $NANOCHAT_BASE_DIR
 
 # -----------------------------------------------------------------------------
+# Auto-detect PyTorch flavour
+# Source the GPU configuration utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/scripts/gpu_config_utils.sh"
+
+TORCH_FLAVOUR=$(detect_torch_flavour)
+show_gpu_info "$TORCH_FLAVOUR"
+
+# Auto-detect number of GPUs for NPROC_PER_NODE
+NUM_GPUS=$(detect_num_gpus "$TORCH_FLAVOUR")
+# Ensure at least 1 process (fallback to 1 if no GPUs detected)
+if [ "$NUM_GPUS" -eq 0 ]; then
+    NUM_GPUS=1
+fi
+export NPROC_PER_NODE="${NPROC_PER_NODE:-$NUM_GPUS}"
+echo "Auto-detected $NUM_GPUS GPU(s), using NPROC_PER_NODE=$NPROC_PER_NODE"
+
+# -----------------------------------------------------------------------------
 # Python venv setup with uv
 
 # install uv (if not already installed)
 command -v uv &> /dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh
 # create a .venv local virtual environment (if it doesn't exist)
 [ -d ".venv" ] || uv venv
-# install the repo dependencies
-uv sync --extra gpu
 # activate venv so that `python` uses the project's venv instead of system python
 source .venv/bin/activate
+
+# install the repo dependencies with the detected PyTorch flavour
+echo "Installing dependencies for PyTorch flavour: $TORCH_FLAVOUR"
+uv sync --extra $TORCH_FLAVOUR
+
+# Verify the backend after installation
+verify_backend_after_install
+
+# Re-detect GPU count after PyTorch installation (more accurate)
+# This is especially important for ROCm where rocminfo might not detect GPUs correctly
+NUM_GPUS_AFTER_INSTALL=$(detect_num_gpus "$TORCH_FLAVOUR")
+if [ "$NUM_GPUS_AFTER_INSTALL" -gt 0 ] && [ "$NUM_GPUS" -ne "$NUM_GPUS_AFTER_INSTALL" ]; then
+    echo "Updated GPU count after PyTorch installation: $NUM_GPUS → $NUM_GPUS_AFTER_INSTALL"
+    NUM_GPUS=$NUM_GPUS_AFTER_INSTALL
+    export NPROC_PER_NODE="${NPROC_PER_NODE:-$NUM_GPUS}"
+    echo "Using NPROC_PER_NODE=$NPROC_PER_NODE"
+fi
 
 # -----------------------------------------------------------------------------
 # wandb setup
@@ -77,10 +110,10 @@ python -m scripts.tok_eval
 echo "Waiting for dataset download to complete..."
 wait $DATASET_DOWNLOAD_PID
 
-# Number of processes/GPUs to use
-NPROC_PER_NODE=8
-
 # pretrain the d20 model
+# Set optimal environment variables based on detected PyTorch flavour
+set_backend_env_vars "$TORCH_FLAVOUR"
+
 torchrun --standalone --nproc_per_node=$NPROC_PER_NODE -m scripts.base_train -- --depth=20 --target-param-data-ratio=20 --run=$WANDB_RUN
 # evaluate the model on a larger chunk of train/val data and draw some samples
 torchrun --standalone --nproc_per_node=$NPROC_PER_NODE -m scripts.base_loss
