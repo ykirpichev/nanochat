@@ -40,21 +40,21 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 
-# target torch to cuda 12.8, rocm6.4 or CPU
+# target torch to cuda 12.8, rocm7.1 (nightly) or CPU
 [tool.uv.sources]
 torch = [
     { index = "pytorch-cpu", extra = "cpu" },
     { index = "pytorch-cu128", extra = "gpu" },
-    { index = "pytorch-rocm64", extra = "rocm" },
+    { index = "pytorch-rocm71-nightly", extra = "rocm" },
 ]
 
 pytorch-triton-rocm = [
-    { index = "pytorch-rocm64", extra = "rocm", marker = "sys_platform == 'linux'" },
+    { index = "pytorch-rocm71-nightly", extra = "rocm", marker = "sys_platform == 'linux'" },
 ]
 
 [[tool.uv.index]]
-name = "pytorch-rocm64"
-url = "https://download.pytorch.org/whl/rocm6.4"
+name = "pytorch-rocm71-nightly"
+url = "https://download.pytorch.org/whl/nightly/rocm7.1"
 explicit = true
 
 [[tool.uv.index]]
