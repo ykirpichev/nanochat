@@ -1116,7 +1116,7 @@ dependencies = [
     { name = "huggingface-hub" },
     { name = "packaging" },
     { name = "pyyaml" },
-    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu')" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d6/c8/2d4fea16366d34069af6d4c4f61218f55e5d0daea5d4c24d58849e9fd626/kernels-0.11.7.tar.gz", hash = "sha256:99c3aa518965518902f4dc26053d6051f06abc904ae33d9486c28674a2ea0fa5", size = 50282, upload-time = "2026-01-08T15:41:57.383Z" }
 wheels = [
@@ -1528,7 +1528,8 @@ dependencies = [
     { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra != 'extra-8-nanochat-cpu' and extra != 'extra-8-nanochat-gpu' and extra != 'extra-8-nanochat-rocm')" },
     { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-8-nanochat-cpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm')" },
     { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-8-nanochat-gpu' or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
-    { name = "torch", version = "2.9.1+rocm6.4", source = { registry = "https://download.pytorch.org/whl/rocm6.4" }, marker = "(extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra != 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra != 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "torch", version = "2.10.0.dev20251208+rocm7.1", source = { registry = "https://download.pytorch.org/whl/nightly/rocm7.1" }, marker = "(sys_platform == 'linux' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "torch", version = "2.11.0.dev20260117+rocm7.1", source = { registry = "https://download.pytorch.org/whl/nightly/rocm7.1" }, marker = "(sys_platform != 'linux' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm')" },
     { name = "transformers" },
     { name = "uvicorn" },
     { name = "wandb" },
@@ -1545,7 +1546,8 @@ gpu = [
 ]
 rocm = [
     { name = "pytorch-triton-rocm", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
-    { name = "torch", version = "2.9.1+rocm6.4", source = { registry = "https://download.pytorch.org/whl/rocm6.4" } },
+    { name = "torch", version = "2.10.0.dev20251208+rocm7.1", source = { registry = "https://download.pytorch.org/whl/nightly/rocm7.1" }, marker = "(sys_platform == 'linux' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "torch", version = "2.11.0.dev20260117+rocm7.1", source = { registry = "https://download.pytorch.org/whl/nightly/rocm7.1" }, marker = "(sys_platform != 'linux' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm')" },
 ]
 
 [package.dev-dependencies]
@@ -1562,7 +1564,7 @@ requires-dist = [
     { name = "matplotlib", specifier = ">=3.10.8" },
     { name = "psutil", specifier = ">=7.1.0" },
     { name = "python-dotenv", specifier = ">=1.2.1" },
-    { name = "pytorch-triton-rocm", marker = "platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'rocm'", specifier = ">=3.5.1", index = "https://download.pytorch.org/whl/rocm6.4", conflict = { package = "nanochat", extra = "rocm" } },
+    { name = "pytorch-triton-rocm", marker = "platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'rocm'", specifier = ">=3.5.1", index = "https://download.pytorch.org/whl/nightly/rocm7.1", conflict = { package = "nanochat", extra = "rocm" } },
     { name = "regex", specifier = ">=2025.9.1" },
     { name = "rustbpe", specifier = ">=0.1.0" },
     { name = "scipy", specifier = ">=1.15.3" },
@@ -1573,7 +1575,7 @@ requires-dist = [
     { name = "torch", specifier = ">=2.9.1" },
     { name = "torch", marker = "extra == 'cpu'", specifier = ">=2.9.1", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "nanochat", extra = "cpu" } },
     { name = "torch", marker = "extra == 'gpu'", specifier = ">=2.9.1", index = "https://download.pytorch.org/whl/cu128", conflict = { package = "nanochat", extra = "gpu" } },
-    { name = "torch", marker = "extra == 'rocm'", specifier = ">=2.9.1", index = "https://download.pytorch.org/whl/rocm6.4", conflict = { package = "nanochat", extra = "rocm" } },
+    { name = "torch", marker = "extra == 'rocm'", specifier = ">=2.9.1", index = "https://download.pytorch.org/whl/nightly/rocm7.1", conflict = { package = "nanochat", extra = "rocm" } },
     { name = "transformers", specifier = ">=4.57.3" },
     { name = "uvicorn", specifier = ">=0.36.0" },
     { name = "wandb", specifier = ">=0.21.3" },
@@ -1719,7 +1721,7 @@ name = "nvidia-cudnn-cu12"
 version = "9.10.2.21"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas-cu12", marker = "extra == 'extra-8-nanochat-gpu' or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "nvidia-cublas-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/fa/41/e79269ce215c857c935fd86bcfe91a451a584dfc27f1e068f568b9ad1ab7/nvidia_cudnn_cu12-9.10.2.21-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:c9132cc3f8958447b4910a1720036d9eff5928cc3179b0a51fb6d167c6cc87d8", size = 705026878, upload-time = "2025-06-06T21:52:51.348Z" },
@@ -1732,7 +1734,7 @@ name = "nvidia-cufft-cu12"
 version = "11.3.3.83"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink-cu12", marker = "extra == 'extra-8-nanochat-gpu' or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "nvidia-nvjitlink-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/60/bc/7771846d3a0272026c416fbb7e5f4c1f146d6d80704534d0b187dd6f4800/nvidia_cufft_cu12-11.3.3.83-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:848ef7224d6305cdb2a4df928759dca7b1201874787083b6e7550dd6765ce69a", size = 193109211, upload-time = "2025-03-07T01:44:56.873Z" },
@@ -1764,9 +1766,9 @@ name = "nvidia-cusolver-cu12"
 version = "11.7.3.90"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas-cu12", marker = "extra == 'extra-8-nanochat-gpu' or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
-    { name = "nvidia-cusparse-cu12", marker = "extra == 'extra-8-nanochat-gpu' or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
-    { name = "nvidia-nvjitlink-cu12", marker = "extra == 'extra-8-nanochat-gpu' or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "nvidia-cublas-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "nvidia-cusparse-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "nvidia-nvjitlink-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c8/32/f7cd6ce8a7690544d084ea21c26e910a97e077c9b7f07bf5de623ee19981/nvidia_cusolver_cu12-11.7.3.90-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:db9ed69dbef9715071232caa9b69c52ac7de3a95773c2db65bdba85916e4e5c0", size = 267229841, upload-time = "2025-03-07T01:46:54.356Z" },
@@ -1779,7 +1781,7 @@ name = "nvidia-cusparse-cu12"
 version = "12.5.8.93"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink-cu12", marker = "extra == 'extra-8-nanochat-gpu' or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "nvidia-nvjitlink-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/bc/f7/cd777c4109681367721b00a106f491e0d0d15cfa1fd59672ce580ce42a97/nvidia_cusparse_cu12-12.5.8.93-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:9b6c161cb130be1a07a27ea6923df8141f3c295852f4b260c65f18f3e0a091dc", size = 288117129, upload-time = "2025-03-07T01:47:40.407Z" },
@@ -2391,16 +2393,16 @@ wheels = [
 
 [[package]]
 name = "pytorch-triton-rocm"
-version = "3.5.1"
-source = { registry = "https://download.pytorch.org/whl/rocm6.4" }
+version = "3.6.0+git5261b273"
+source = { registry = "https://download.pytorch.org/whl/nightly/rocm7.1" }
 wheels = [
-    { url = "https://download.pytorch.org/whl/pytorch_triton_rocm-3.5.1-cp310-cp310-linux_x86_64.whl" },
-    { url = "https://download.pytorch.org/whl/pytorch_triton_rocm-3.5.1-cp311-cp311-linux_x86_64.whl" },
-    { url = "https://download.pytorch.org/whl/pytorch_triton_rocm-3.5.1-cp312-cp312-linux_x86_64.whl" },
-    { url = "https://download.pytorch.org/whl/pytorch_triton_rocm-3.5.1-cp313-cp313-linux_x86_64.whl" },
-    { url = "https://download.pytorch.org/whl/pytorch_triton_rocm-3.5.1-cp313-cp313t-linux_x86_64.whl" },
-    { url = "https://download.pytorch.org/whl/pytorch_triton_rocm-3.5.1-cp314-cp314-linux_x86_64.whl" },
-    { url = "https://download.pytorch.org/whl/pytorch_triton_rocm-3.5.1-cp314-cp314t-linux_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/pytorch_triton_rocm-3.6.0%2Bgit5261b273-cp310-cp310-linux_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/pytorch_triton_rocm-3.6.0%2Bgit5261b273-cp311-cp311-linux_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/pytorch_triton_rocm-3.6.0%2Bgit5261b273-cp312-cp312-linux_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/pytorch_triton_rocm-3.6.0%2Bgit5261b273-cp313-cp313-linux_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/pytorch_triton_rocm-3.6.0%2Bgit5261b273-cp313-cp313t-linux_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/pytorch_triton_rocm-3.6.0%2Bgit5261b273-cp314-cp314-linux_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/pytorch_triton_rocm-3.6.0%2Bgit5261b273-cp314-cp314t-linux_x86_64.whl" },
 ]
 
 [[package]]
@@ -3236,35 +3238,61 @@ wheels = [
 
 [[package]]
 name = "torch"
-version = "2.9.1+rocm6.4"
-source = { registry = "https://download.pytorch.org/whl/rocm6.4" }
+version = "2.10.0.dev20251208+rocm7.1"
+source = { registry = "https://download.pytorch.org/whl/nightly/rocm7.1" }
 resolution-markers = [
     "python_full_version >= '3.12' and sys_platform == 'linux'",
-    "python_full_version >= '3.12' and sys_platform != 'linux'",
     "python_full_version == '3.11.*' and sys_platform == 'linux'",
-    "python_full_version == '3.11.*' and sys_platform != 'linux'",
     "python_full_version < '3.11' and sys_platform == 'linux'",
+]
+dependencies = [
+    { name = "filelock", marker = "(sys_platform == 'linux' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "fsspec", marker = "(sys_platform == 'linux' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "jinja2", marker = "(sys_platform == 'linux' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "networkx", version = "3.4.2", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and sys_platform == 'linux' and extra == 'extra-8-nanochat-rocm') or (python_full_version >= '3.11' and extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (sys_platform != 'linux' and extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "networkx", version = "3.5", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and sys_platform == 'linux' and extra == 'extra-8-nanochat-rocm') or (python_full_version < '3.11' and extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (sys_platform != 'linux' and extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "pytorch-triton-rocm", marker = "(sys_platform == 'linux' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "setuptools", marker = "(python_full_version >= '3.12' and sys_platform == 'linux' and extra == 'extra-8-nanochat-rocm') or (python_full_version < '3.12' and extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (sys_platform != 'linux' and extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "sympy", marker = "(sys_platform == 'linux' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "typing-extensions", marker = "(sys_platform == 'linux' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+]
+wheels = [
+    { url = "https://download.pytorch.org/whl/nightly/rocm7.1/torch-2.10.0.dev20251208%2Brocm7.1-cp310-cp310-manylinux_2_28_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/rocm7.1/torch-2.10.0.dev20251208%2Brocm7.1-cp311-cp311-manylinux_2_28_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/rocm7.1/torch-2.10.0.dev20251208%2Brocm7.1-cp312-cp312-manylinux_2_28_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/rocm7.1/torch-2.10.0.dev20251208%2Brocm7.1-cp313-cp313-manylinux_2_28_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/rocm7.1/torch-2.10.0.dev20251208%2Brocm7.1-cp313-cp313t-manylinux_2_28_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/rocm7.1/torch-2.10.0.dev20251208%2Brocm7.1-cp314-cp314-manylinux_2_28_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/rocm7.1/torch-2.10.0.dev20251208%2Brocm7.1-cp314-cp314t-manylinux_2_28_x86_64.whl" },
+]
+
+[[package]]
+name = "torch"
+version = "2.11.0.dev20260117+rocm7.1"
+source = { registry = "https://download.pytorch.org/whl/nightly/rocm7.1" }
+resolution-markers = [
+    "python_full_version >= '3.12' and sys_platform != 'linux'",
+    "python_full_version == '3.11.*' and sys_platform != 'linux'",
     "python_full_version < '3.11' and sys_platform != 'linux'",
 ]
 dependencies = [
-    { name = "filelock", marker = "(extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra != 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra != 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
-    { name = "fsspec", marker = "(extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra != 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra != 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
-    { name = "jinja2", marker = "(extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra != 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra != 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
-    { name = "networkx", version = "3.4.2", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm')" },
-    { name = "networkx", version = "3.5", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
-    { name = "pytorch-triton-rocm", marker = "(sys_platform == 'linux' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
-    { name = "setuptools", marker = "(python_full_version >= '3.12' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
-    { name = "sympy", marker = "(extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra != 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra != 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
-    { name = "typing-extensions", marker = "(extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra != 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra != 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "filelock", marker = "(sys_platform != 'linux' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "fsspec", marker = "(sys_platform != 'linux' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "jinja2", marker = "(sys_platform != 'linux' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "networkx", version = "3.4.2", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and sys_platform != 'linux' and extra == 'extra-8-nanochat-rocm') or (python_full_version >= '3.11' and extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (sys_platform == 'linux' and extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "networkx", version = "3.5", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and sys_platform != 'linux' and extra == 'extra-8-nanochat-rocm') or (python_full_version < '3.11' and extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (sys_platform == 'linux' and extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "setuptools", marker = "(python_full_version >= '3.12' and sys_platform != 'linux' and extra == 'extra-8-nanochat-rocm') or (python_full_version < '3.12' and extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (sys_platform == 'linux' and extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "sympy", marker = "(sys_platform != 'linux' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm')" },
+    { name = "typing-extensions", marker = "(sys_platform != 'linux' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-gpu') or (extra == 'extra-8-nanochat-cpu' and extra == 'extra-8-nanochat-rocm') or (extra == 'extra-8-nanochat-gpu' and extra == 'extra-8-nanochat-rocm')" },
 ]
 wheels = [
-    { url = "https://download.pytorch.org/whl/rocm6.4/torch-2.9.1%2Brocm6.4-cp310-cp310-manylinux_2_28_x86_64.whl" },
-    { url = "https://download.pytorch.org/whl/rocm6.4/torch-2.9.1%2Brocm6.4-cp311-cp311-manylinux_2_28_x86_64.whl" },
-    { url = "https://download.pytorch.org/whl/rocm6.4/torch-2.9.1%2Brocm6.4-cp312-cp312-manylinux_2_28_x86_64.whl" },
-    { url = "https://download.pytorch.org/whl/rocm6.4/torch-2.9.1%2Brocm6.4-cp313-cp313-manylinux_2_28_x86_64.whl" },
-    { url = "https://download.pytorch.org/whl/rocm6.4/torch-2.9.1%2Brocm6.4-cp313-cp313t-manylinux_2_28_x86_64.whl" },
-    { url = "https://download.pytorch.org/whl/rocm6.4/torch-2.9.1%2Brocm6.4-cp314-cp314-manylinux_2_28_x86_64.whl" },
-    { url = "https://download.pytorch.org/whl/rocm6.4/torch-2.9.1%2Brocm6.4-cp314-cp314t-manylinux_2_28_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/rocm7.1/torch-2.11.0.dev20260117%2Brocm7.1-cp310-cp310-manylinux_2_28_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/rocm7.1/torch-2.11.0.dev20260117%2Brocm7.1-cp311-cp311-manylinux_2_28_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/rocm7.1/torch-2.11.0.dev20260117%2Brocm7.1-cp312-cp312-manylinux_2_28_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/rocm7.1/torch-2.11.0.dev20260117%2Brocm7.1-cp313-cp313-manylinux_2_28_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/rocm7.1/torch-2.11.0.dev20260117%2Brocm7.1-cp313-cp313t-manylinux_2_28_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/rocm7.1/torch-2.11.0.dev20260117%2Brocm7.1-cp314-cp314-manylinux_2_28_x86_64.whl" },
+    { url = "https://download.pytorch.org/whl/nightly/rocm7.1/torch-2.11.0.dev20260117%2Brocm7.1-cp314-cp314t-manylinux_2_28_x86_64.whl" },
 ]
 
 [[package]]
