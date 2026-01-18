@@ -159,9 +159,9 @@ class EfficientMoE(nn.Module):
         self.n_embd = config.n_embd
         
         # Default d_expert to 4 * n_embd (same as standard MLP)
-        if d_expert is None:
-            d_expert = 4 * config.n_embd * top_k // num_experts
-        self.d_expert = d_expert
+        # if d_expert is None:
+        d_expert = 4 * config.n_embd * top_k // num_experts
+        # self.d_expert = d_expert
         
         # Router: projects input to logits for each expert
         self.router = nn.Linear(config.n_embd, num_experts, bias=False)
@@ -177,6 +177,7 @@ class EfficientMoE(nn.Module):
     def forward(self, x):
         """
         Forward pass through MoE layer.
+        Fully vectorized torch.compile-friendly implementation with no Python loops.
         Args:
             x: Input tensor of shape (B, T, n_embd)
         Returns:
@@ -186,44 +187,45 @@ class EfficientMoE(nn.Module):
         original_shape = x.shape
         
         # Flatten batch and sequence dimensions for routing
-        x_flat = x.view(-1, C)  # (B*T, n_embd)
+        x_flat = x.view(-1, C)  # (N, n_embd) where N = B*T
+        N = x_flat.size(0)
         
         # Compute router logits
-        router_logits = self.router(x_flat)  # (B*T, num_experts)
+        router_logits = self.router(x_flat)  # (N, num_experts)
         
         # Get top-k experts for each token
-        top_k_logits, top_k_indices = torch.topk(router_logits, self.top_k, dim=-1)  # (B*T, top_k)
+        top_k_logits, top_k_indices = torch.topk(router_logits, self.top_k, dim=-1)  # (N, top_k)
         
         # Compute routing probabilities (softmax over top-k)
-        router_probs = F.softmax(top_k_logits, dim=-1)  # (B*T, top_k)
+        router_probs = F.softmax(top_k_logits, dim=-1)  # (N, top_k)
         
-        # Initialize output tensor
-        output = torch.zeros_like(x_flat)  # (B*T, n_embd)
+        # Fully vectorized approach: consolidate expert weights and process in batch
+        # Extract weights from all experts into batched tensors
+        # nn.Linear weights are (out_features, in_features), so we need to transpose to match CPUEfficientMoE format
+        # CPUEfficientMoE uses (num_experts, in_features, out_features) format
+        d_expert = self.experts[0].c_fc.out_features
+        # Stack and transpose: (d_expert, C) -> (C, d_expert) for w1
+        w1_all = torch.stack([expert.c_fc.weight.T for expert in self.experts], dim=0)  # (num_experts, C, d_expert)
+        # Stack: (C, d_expert) -> (d_expert, C) for w2 (already in correct format)
+        w2_all = torch.stack([expert.c_proj.weight.T for expert in self.experts], dim=0)  # (num_experts, d_expert, C)
         
-        # Process each expert
-        for expert_idx in range(self.num_experts):
-            # Find tokens that route to this expert
-            expert_mask = (top_k_indices == expert_idx)  # (B*T, top_k)
-            expert_mask_any = expert_mask.any(dim=-1)  # (B*T,)
-            
-            if not expert_mask_any.any():
-                continue  # No tokens route to this expert
-            
-            # Get the weights for this expert (sum over top_k if token routes to expert multiple times)
-            expert_weights = (router_probs * expert_mask.float()).sum(dim=-1)  # (B*T,)
-            expert_weights = expert_weights * expert_mask_any.float()  # Zero out non-routed tokens
-            
-            # Get tokens that route to this expert
-            expert_input = x_flat[expert_mask_any]  # (num_tokens, n_embd)
-            
-            # Forward through expert
-            if self.training and self.checkpointing and expert_input.requires_grad:
-                expert_output = checkpoint(self.experts[expert_idx], expert_input, use_reentrant=False)
-            else:
-                expert_output = self.experts[expert_idx](expert_input)  # (num_tokens, n_embd)
-            
-            # Accumulate weighted outputs
-            output[expert_mask_any] += expert_output * expert_weights[expert_mask_any].unsqueeze(-1)
+        # Expand input for all top-k experts: (N, top_k, C)
+        x_expanded = x_flat.unsqueeze(1).expand(-1, self.top_k, -1)  # (N, top_k, C)
+        
+        # Select expert weights for each (token, top_k) pair using advanced indexing
+        # top_k_indices: (N, top_k) -> w1_selected: (N, top_k, C, d_expert)
+        w1_selected = w1_all[top_k_indices]  # (N, top_k, C, d_expert)
+        w2_selected = w2_all[top_k_indices]  # (N, top_k, d_expert, C)
+        
+        # First layer: (N, top_k, 1, C) @ (N, top_k, C, d_expert) -> (N, top_k, 1, d_expert)
+        hidden = torch.matmul(x_expanded.unsqueeze(2), w1_selected)  # (N, top_k, 1, d_expert)
+        hidden = F.relu(hidden).square()  # relu^2 activation
+        
+        # Second layer: (N, top_k, 1, d_expert) @ (N, top_k, d_expert, C) -> (N, top_k, 1, C)
+        expert_outputs = torch.matmul(hidden, w2_selected).squeeze(2)  # (N, top_k, C)
+        
+        # Apply routing weights and sum over top_k: (N, top_k, C) -> (N, C)
+        output = (expert_outputs * router_probs.unsqueeze(-1)).sum(dim=1)  # (N, C)
         
         # Reshape back to original shape
         output = output.view(original_shape)  # (B, T, n_embd)
@@ -231,7 +233,7 @@ class EfficientMoE(nn.Module):
         # Compute load balancing loss
         if self.training:
             # Compute fraction of tokens routed to each expert
-            router_probs_all = F.softmax(router_logits, dim=-1)  # (B*T, num_experts)
+            router_probs_all = F.softmax(router_logits, dim=-1)  # (N, num_experts)
             # Average over tokens to get expert usage
             expert_usage = router_probs_all.mean(dim=0)  # (num_experts,)
             # Load balancing loss: encourage uniform distribution
