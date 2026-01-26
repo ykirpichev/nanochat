@@ -3,6 +3,7 @@ Unified Flash Attention interface with automatic FA3/SDPA switching.
 
 Exports `flash_attn` module that matches the FA3 API exactly, but falls back
 to PyTorch SDPA on non-Hopper GPUs, MPS, and CPU.
+Uses Primus-Turbo on AMD GPUs (ROCm) when available.
 
 Usage (drop-in replacement for FA3):
     from nanochat.flash_attention import flash_attn
@@ -15,6 +16,13 @@ Usage (drop-in replacement for FA3):
 """
 import torch
 import torch.nn.functional as F
+
+# Try to load Primus-Turbo for AMD GPUs
+try:
+    import primus_turbo.pytorch as turbo
+except ImportError:
+    turbo = None
+HAS_TURBO = turbo is not None
 
 
 # =============================================================================
@@ -39,7 +47,7 @@ def _load_flash_attention_3():
 _fa3 = _load_flash_attention_3()
 HAS_FA3 = _fa3 is not None
 
-# Override for testing: set to 'fa3', 'sdpa', or None (auto)
+# Override for testing: set to 'fa3', 'turbo', 'sdpa', or None (auto)
 _override_impl = None
 
 
@@ -52,7 +60,14 @@ def _use_fa3():
         return False
     return HAS_FA3  # auto
 
-
+def _use_turbo():
+    """Determine whether to use Primus Turbo based on availability and override."""
+    if _override_impl == 'turbo':
+        assert HAS_TURBO, "Cannot override to Turbo: not available on this hardware"
+        return True
+    if _override_impl == 'sdpa':
+        return False
+    return HAS_TURBO  # auto
 # =============================================================================
 # SDPA helpers
 # =============================================================================
@@ -109,6 +124,9 @@ def flash_attn_func(q, k, v, causal=False, window_size=(-1, -1)):
     """
     if _use_fa3():
         return _fa3.flash_attn_func(q, k, v, causal=causal, window_size=window_size)
+    
+    if _use_turbo():
+        return turbo.ops.flash_attn_func(q, k, v, causal=causal, window_size=window_size)
 
     # SDPA fallback: transpose (B, T, H, D) -> (B, H, T, D)
     q = q.transpose(1, 2)
