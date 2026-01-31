@@ -25,6 +25,8 @@ from nanochat.optim import MuonAdamW, DistMuonAdamW
 # Our custom Flash Attention module that automatically uses FA3 on Hopper+ and SDPA fallback elsewhere
 from nanochat.flash_attention import flash_attn
 
+from megablocks import layers
+
 @dataclass
 class GPTConfig:
     sequence_len: int = 2048
@@ -131,15 +133,43 @@ class MLP(nn.Module):
         return x
 
 
+
+
+# Wrapper to add regression head to the original MoE backbone
+class MoEMLP(torch.nn.Module):
+    def __init__(self, config, num_experts=16, top_k=2, device="cuda", dtype=torch.bfloat16):
+        super().__init__()
+        self.dtype = dtype
+        moe_args = layers.arguments.Arguments(
+            hidden_size=config.n_embd,
+            ffn_hidden_size=config.n_embd * 4 * 2 // num_experts, # keep size the same as the original model *2 because of bfloat16
+            moe_num_experts=num_experts,
+            moe_top_k=top_k,
+            device=device,
+            fp16=False,
+            bf16=True, # MegaBlocks using BF16
+            mlp_impl="grouped"
+        )
+        # Backbone: Same as benchmarked model (Preserves original size)
+        self.backbone = layers.dmoe.dMoE(moe_args).to(device).to(dtype)
+
+    def forward(self, x):
+        # Explicit input conversion
+        x = x.to(self.dtype)
+        # Backbone returns (output, auxiliary_loss)
+        features, auxiliary_loss = self.backbone(x)
+        return features.to(torch.float32), auxiliary_loss.to(torch.float32)
+
+
 class Block(nn.Module):
     def __init__(self, config, layer_idx):
         super().__init__()
         self.attn = CausalSelfAttention(config, layer_idx)
-        self.mlp = MLP(config)
+        self.mlp = MoEMLP(config)
 
     def forward(self, x, ve, cos_sin, window_size, kv_cache):
         x = x + self.attn(norm(x), ve, cos_sin, window_size, kv_cache)
-        x = x + self.mlp(norm(x))
+        x = x + self.mlp(norm(x))[0]
         return x
 
 
@@ -197,8 +227,8 @@ class GPT(nn.Module):
             attn.c_k:        uniform, std=1/sqrt(n_embd)
             attn.c_v:        uniform, std=1/sqrt(n_embd)
             attn.c_proj:     zeros
-            mlp.c_fc:        uniform, std=1/sqrt(n_embd)
-            mlp.c_proj:      zeros
+            # mlp.c_fc:        uniform, std=1/sqrt(n_embd)
+            # mlp.c_proj:      zeros
         """
 
         # Embedding and unembedding
@@ -213,8 +243,8 @@ class GPT(nn.Module):
             torch.nn.init.uniform_(block.attn.c_k.weight, -s, s)
             torch.nn.init.uniform_(block.attn.c_v.weight, -s, s)
             torch.nn.init.zeros_(block.attn.c_proj.weight) # projections are zero
-            torch.nn.init.uniform_(block.mlp.c_fc.weight, -s, s)
-            torch.nn.init.zeros_(block.mlp.c_proj.weight)
+            # torch.nn.init.uniform_(block.mlp.c_fc.weight, -s, s)
+            # torch.nn.init.zeros_(block.mlp.c_proj.weight)
 
         # Per-layer scalars
         self.resid_lambdas.fill_(1.0)   # 1.0 => typical residual connections at init
